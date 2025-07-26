@@ -6,23 +6,25 @@
   "scripts": {
     "build": "tsc -b",
     "start": "node ./dist/index.js",
-    "dev": "npm run build && npm run start"
+    "dev": "ts-node-dev --respawn src src/index.ts"
   },
   "devDependencies": {
     "@repo/backend-common": "workspace:*",
     "@repo/common": "workspace:*",
-    "@repo/typescript-config": "workspace:*"
+    "@repo/typescript-config": "workspace:*",
+    "@types/cookie-parser": "^1.4.9",
+    "ts-node-dev": "^2.0.0"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    
     "@repo/database": "workspace:*",
     "@types/bcryptjs": "^3.0.0",
     "@types/express": "^5.0.3",
     "@types/jsonwebtoken": "^9.0.10",
     "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2"
   }
