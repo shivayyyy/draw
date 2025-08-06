@@ -7,6 +7,8 @@ import bcrypt, { hash } from "bcryptjs"
 import jwt from "jsonwebtoken"
 import { JWT_SECRET } from "@repo/backend-common/config";
 import cookieParser from "cookie-parser"
+import cors from "cors"
+
 
 
 interface newReq extends Request{
@@ -17,6 +19,10 @@ const app=express();
 app.use(express.json())
 app.use(cookieParser())
 app.use(express.json())
+app.use(cors({
+    origin:"http://localhost:3000",
+    credentials:true
+}));
 
 
 app.listen(3001);
@@ -25,6 +31,7 @@ app.post("/signup",async(req,res)=>{
     
     //get user data from body
     const {name,email,password}=req.body;
+    console.log(`${name},  ${email}, ${password}`)
     //search for email in db
     const isFound=await prismaClient.user.findFirst({
         where:{
@@ -32,7 +39,7 @@ app.post("/signup",async(req,res)=>{
         }
     })
     if(isFound){
-        res.status(411).json({message:"this email already exist try to login"})
+        return;
     }
     //hash the pass
     const hashedPass=await bcrypt.hash(password,12)
@@ -52,11 +59,12 @@ app.post("/signup",async(req,res)=>{
     const token=jwt.sign(newUser,JWT_SECRET)
     console.log(token)
     //send cookies
-    res.cookie('token', token, {
-    httpOnly: true,           
-       
-    maxAge: 1000 * 60 * 60 * 24, 
-  })
+    res.cookie("token",token , {
+        maxAge:24 * 60 * 60 * 1000,
+        sameSite:'lax',
+        secure:false
+    })
+ 
 
   console.log("after sending cookie checking error")
      return res.json({message:"new User created"})
@@ -73,6 +81,7 @@ app.post("/signup",async(req,res)=>{
 app.post("/login",async(req,res)=>{
     //get the input from the body
     const {email,password}=req.body;
+  
     //check for user existense
     const registeredUser=await prismaClient.user.findFirst({
         where:{
@@ -93,7 +102,12 @@ app.post("/login",async(req,res)=>{
     //send the token in header 
 
     const token=await jwt.sign(registeredUser,JWT_SECRET)
-    res.cookie("token",token)
+    res.clearCookie("token")
+    res.cookie("token",token , {
+        maxAge:24 * 60 * 60 * 1000,
+        sameSite:'lax',
+        secure:false
+    })
     res.status(200).json({message:"successfully logged in"})
 })
 
@@ -134,9 +148,9 @@ app.post("/room",getUser,async(req,res)=>{
 })
 
 
-app.post("/chat/:roomId",getUser,async(req,res)=>{
+app.get("/chat/:roomId",getUser,async(req,res)=>{
     const roomId=Number(req.params.roomId);
-    const geChatLogs=await prismaClient.chat.findMany({
+    const getChatLogs=await prismaClient.chat.findMany({
         where:{
             roomId,
         },
@@ -146,6 +160,7 @@ app.post("/chat/:roomId",getUser,async(req,res)=>{
         }
     })
 
-    res.json({geChatLogs})
+    res.json({getChatLogs})
 
 })
+
